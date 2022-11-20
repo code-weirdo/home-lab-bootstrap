@@ -1,0 +1,7 @@
+---
+# System configuration
+system_timezone: "Africa/Johannesburg"
+
+# K3s Configuration
+k3s_extra_server_args: --disable traefik --disable servicelb
+#k3s_api_vip: 192.168.10.63

@@ -1,0 +1,32 @@
+---
+
+- name: Set hostname
+  hostname:
+    name: "{{ hostname }}"
+
+- name: Set timezone
+  timezone:
+    name: "{{ system_timezone }}"
+  when: (system_timezone is defined)
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Install linux-modules-extra-raspi
+  become: yes
+  apt:
+    name: linux-modules-extra-raspi
+    update_cache: yes
+    state: present
+
+- name: Install flux on masters
+  become: yes
+  apt:
+    name: flux
+    update_cache: yes
+    state: present
+  when: ansible_host in groups['master']

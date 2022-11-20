@@ -1,0 +1,13 @@
+---
+
+- name: Download installer
+  get_url:
+    url: https://get.k3s.io
+    dest: /usr/bin/k3s-install
+    mode: '0744'
+
+- name: Bootstrap worker nodes
+  shell: "/usr/bin/k3s-install"
+  environment:
+    K3S_TOKEN: "{{ k3s_token }}"
+    K3S_URL: "https://{{ groups['master'][0] }}:6443"

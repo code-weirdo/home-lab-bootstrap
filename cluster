@@ -1,0 +1,89 @@
+#!/bin/bash
+
+ANSIBLE_USER=${ANSIBLE_USER:-ubuntu}
+GITHUB_USER=${GITHUB_USER:-code-weirdo}
+GITHUB_FLUX_REPO=${GITHUB_FLUX_REPO:-home-lab-flux}
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+need() {
+    which "$1" &>/dev/null || die "Binary '$1' is missing but required"
+}
+
+die() {
+  message "$1"
+  exit 1
+}
+
+message() {
+  echo -e "\n######################################################################"
+  echo "# $1"
+  echo "######################################################################"
+}
+
+loadSecret() {
+  echo `cat $REPO_ROOT/.secrets | grep $1 | cut -f2 -d=`
+}
+
+ansible-bootstrap() {
+  message "Bootstrapping Ansible and setting up SSH keys"
+  ansible-galaxy collection install -r ./collections/requirements.yml
+  ansible-playbook bootstrap-ssh.yml --user=$ANSIBLE_USER -kK
+}
+
+ansible-setup-k3s() {
+  message "Bootstrapping K3s cluster"
+  echo `loadSecret ANSIBLE_VAULT_PASSWORD` > /tmp/vault-password-file
+  ansible-playbook site.yml -e @secrets.enc --user=$ANSIBLE_USER --vault-password-file=/tmp/vault-password-file
+  rm /tmp/vault-password-file
+}
+
+bootstrap-flux() {
+  message "Installing fluxv2"
+  flux check --pre > /dev/null
+  FLUX_PRE=$?
+  if [ $FLUX_PRE != 0 ]; then
+    echo -e "Flux prereqs not met:\n"
+    flux check --pre
+    exit 1
+  fi
+  local GITHUB_TOKEN=`loadSecret GITHUB_TOKEN`
+  if [ -z "$GITHUB_TOKEN" ]; then
+    echo "GITHUB_TOKEN is not set! Check $REPO_ROOT/.secrets"
+    exit 1
+  fi
+  env GITHUB_TOKEN=$GITHUB_TOKEN flux bootstrap github \
+    --owner=$GITHUB_USER \
+    --repository=$GITHUB_FLUX_REPO \
+    --branch=master \
+    --private=false \
+    --personal=true \
+    --network-policy=false \
+    --verbose
+
+  FLUX_INSTALLED=$?
+  if [ $FLUX_INSTALLED != 0 ]; then
+    echo -e "flux did not install correctly, aborting!"
+    exit 1
+  fi
+}
+
+need "ansible"
+need "sshpass"
+need "kubectl"
+need "flux"
+
+IFS=$'\n'
+COMMAND=$1
+
+case $COMMAND in
+  bootstrap-ansible)
+    ansible-bootstrap
+    ;;
+  bootstrap-k3s)
+    ansible-setup-k3s
+    ;;
+  bootstrap-flux)
+    bootstrap-flux
+    ;;
+esac

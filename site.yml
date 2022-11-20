@@ -1,0 +1,30 @@
+---
+
+# Install prerequisites
+# - hosts: k3s_cluster
+#   gather_facts: yes
+#   become: yes
+#   roles:
+#     - role: prereqs
+
+# Bootsrap the master nodes
+- hosts: master
+  become: yes
+  serial:
+    - 1
+  roles:
+    - role: k3s/master
+
+# # Bootstrap the worker nodes
+# - hosts: node
+#   become: yes
+#   serial:
+#     - 1
+#   roles:
+#     - role: k3s/node
+
+# Deploy onto the K3s cluster
+- hosts: master[0]
+  become: yes
+  roles:
+    - role: k3s/deploy

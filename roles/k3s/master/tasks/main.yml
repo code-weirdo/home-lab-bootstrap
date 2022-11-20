@@ -1,0 +1,34 @@
+---
+
+- name: Download installer
+  get_url:
+    url: https://get.k3s.io
+    dest: /usr/bin/k3s-install
+    mode: '0744'
+
+- name: Bootstrap first master
+  shell: "/usr/bin/k3s-install server --cluster-init {{ k3s_extra_server_args }}"
+  environment:
+    K3S_TOKEN: "{{ k3s_token }}"
+  when: ansible_host == groups['master'][0]
+
+- name: Bootstrap remaining masters
+  shell: "/usr/bin/k3s-install server --cluster-init --server https://{{ groups['master'][0] }}:6443 {{ k3s_extra_server_args }}"
+  environment:
+    K3S_TOKEN: "{{ k3s_token }}"
+  when: ansible_host not in groups['master'][0]
+
+- name: Copy kubeconfig to ~/.kube/config for first master
+  shell: "/usr/bin/cat /etc/rancher/k3s/k3s.yaml | /usr/bin/sed 's|127.0.0.1|{{ groups['master'][0] }}|g' > ~{{ ansible_user }}/.kube/config"
+  when: k3s_api_vip is not defined
+  
+- name: Copy kubeconfig to ~/.kube/config for API VIP
+  shell: "/usr/bin/cat /etc/rancher/k3s/k3s.yaml | /usr/bin/sed 's|127.0.0.1|{{ k3s_api_vip }}|g' > ~{{ ansible_user }}/.kube/config"
+  when: k3s_api_vip is defined
+
+- name: Fetch kubeconfig from first master
+  fetch:
+    src: ~{{ ansible_user }}/.kube/config
+    dest: ~/.kube/config_homelab
+    flat: yes
+  when: ansible_host == groups['master'][0]
