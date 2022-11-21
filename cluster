@@ -56,10 +56,8 @@ bootstrap-flux() {
     --owner=$GITHUB_USER \
     --repository=$GITHUB_FLUX_REPO \
     --branch=master \
-    --private=false \
-    --personal=true \
-    --network-policy=false \
-    --verbose
+    --path=./clusters/production \
+    --personal=true
 
   FLUX_INSTALLED=$?
   if [ $FLUX_INSTALLED != 0 ]; then

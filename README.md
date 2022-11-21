@@ -17,7 +17,7 @@ Repository for standing up of a multi-master, highly available Raspberry Pi 4 K3
 
 # Bootstrapping
 
-The bootstrapping phase uses Ansible to build out the K3s cluster using the method described [here](https://docs.k3s.io/installation/ha-embedded) rather than using existing Ansible playbooks that manually set everything up.
+The bootstrapping phase uses Ansible to build out the K3s cluster using the installation script method described [here](https://docs.k3s.io/installation/ha-embedded) rather than using existing Ansible playbooks ([k3s-ansible](https://github.com/k3s-io/k3s-ansible)) that manually set everything up.
 
 - Make sure you have a file called .secrets in the root and populate it with the secrets needed - use ./secrets/secrets.template as a starting point (.secrets won't be committed to this repo)
 - `./cluster bootstrap-ansible` will prompt for a password for the hosts in the cluster and will set up the ssh key - just make sure you have a public key under ~/.ssh/id-rsa.pub

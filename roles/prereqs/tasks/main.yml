@@ -22,11 +22,3 @@
     name: linux-modules-extra-raspi
     update_cache: yes
     state: present
-
-- name: Install flux on masters
-  become: yes
-  apt:
-    name: flux
-    update_cache: yes
-    state: present
-  when: ansible_host in groups['master']
