@@ -10,12 +10,14 @@
   shell: "/usr/bin/k3s-install server --cluster-init {{ k3s_extra_server_args }}"
   environment:
     K3S_TOKEN: "{{ k3s_token }}"
+    INSTALL_K3S_VERSION: "{{ k3s_version | default ({}) }}"
   when: ansible_host == groups['master'][0]
 
 - name: Bootstrap remaining masters
   shell: "/usr/bin/k3s-install server --cluster-init --server https://{{ groups['master'][0] }}:6443 {{ k3s_extra_server_args }}"
   environment:
     K3S_TOKEN: "{{ k3s_token }}"
+    INSTALL_K3S_VERSION: "{{ k3s_version | default ({}) }}"
   when: ansible_host not in groups['master'][0]
 
 - name: Copy kubeconfig to ~/.kube/config for first master

@@ -7,7 +7,55 @@
     mode: '0744'
 
 - name: Bootstrap worker nodes
-  shell: "/usr/bin/k3s-install"
+  shell: "/usr/bin/k3s-install {{ k3s_extra_node_args }}"
   environment:
     K3S_TOKEN: "{{ k3s_token }}"
     K3S_URL: "https://{{ groups['master'][0] }}:6443"
+    INSTALL_K3S_VERSION: "{{ k3s_version | default ({}) }}"
+
+- name: USB Storage - Unmount
+  ansible.posix.mount:
+    path: '{{ storage_path }}'
+    src: '{{ storage_dev }}1'
+    fstype: ext4
+    state: unmounted
+
+- name: USB Storage - Read device information
+  community.general.parted: device='{{ storage_dev }}' unit=MiB
+  ignore_errors: true
+  register: storage_dev_info
+
+- name: USB Storage - Remove all partitions
+  community.general.parted:
+    device: '{{ storage_dev }}'
+    number: '{{ item.num }}'
+    state: absent
+  loop: '{{ storage_dev_info.partitions }}'
+
+- name: USB Storage - Create primary partition
+  community.general.parted:
+    device: '{{ storage_dev }}'
+    number: 1
+    state: present
+    fs_type: ext4
+
+- name: USB Storage - Format partition as ext4
+  filesystem:
+    fstype: ext4
+    dev: '{{ storage_dev }}1'
+
+- name: USB Storage - Create mountpoint
+  file:
+    path: '{{ storage_path }}'
+    state: directory
+    recurse: true
+    owner: root
+    group: root
+    mode: 0755
+
+- name: USB Storage - Mount partition
+  ansible.posix.mount:
+    path: '{{ storage_path }}'
+    src: '{{ storage_dev }}1'
+    fstype: ext4
+    state: mounted

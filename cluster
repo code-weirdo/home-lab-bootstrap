@@ -84,4 +84,12 @@ case $COMMAND in
   bootstrap-flux)
     bootstrap-flux
     ;;
+  *)
+    echo "Cluster utility to launch and bootstrap a home lab K3s cluster"
+    echo "  cluster <command>"
+    echo "    commands:"
+    echo "      bootstrap-ansible - set up ansible for a run"
+    echo "      bootstrap-k3s     - create the K3s cluster"
+    echo "      bootstrap-flux    - bootstrap FluxCD"
+    ;;
 esac

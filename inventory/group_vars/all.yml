@@ -3,5 +3,10 @@
 system_timezone: "Africa/Johannesburg"
 
 # K3s Configuration
-k3s_extra_server_args: --disable traefik --disable servicelb
+k3s_version: v1.24.8+k3s1
+k3s_extra_server_args: --disable traefik --disable servicelb --node-taint=node-role.kubernetes.io/master:NoSchedule
+k3s_extra_node_args: --node-label=node.longhorn.io/create-default-disk=true
 #k3s_api_vip: 192.168.10.63
+
+storage_dev: /dev/sda
+storage_path: /var/lib/longhorn
